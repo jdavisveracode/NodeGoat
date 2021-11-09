@@ -3,8 +3,14 @@ version: 2.1
 
 jobs:
   build:
-   description: Private.
+    docker:
+      # specify the version you desire here
+      # The primary container is an instance of the first image listed. The job's commands run in this container.
+      - image: signiant/docker-jenkins-centos7-java8:latest
+    working_directory: ~/target
     steps:
+      - checkout
+      # Install and run Maven
       - run:
          name: Zip build
          working_directory: /tmp/workspace/output
@@ -16,7 +22,6 @@ jobs:
          command: >
            zip -r /tmp/client_upload/environment.zip environment_definitions.json
            environments
-
   # job to upload to Veracode for scanning
   veracode_scan:
 
@@ -35,11 +40,16 @@ jobs:
       - run:
           name: "Get the Veracode agent"
           command: |
-             curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+            curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
              java -jar /opt/veracode/pipeline-scan.jar --veracode_api_id="3d43e6c19ba62a029b4d74ef3274f64e" --veracode_api_key="bcbf7a5c957bb8495ec1be6dbd71a7b6b7549eaed57bd04a81b9d4ec5f61c3c8d634bc68c8139828d0c714bdb1bac088304391e9043f59207801e6cdc062271e " --fail_on_severity="Very High, High" --file="project.zip" --app_id="1231145" --json_output_file="results.json"
  
- ALYSISCENTER_KEY" --source_dir "./" --build_dir "./target" --project_name "Verademo_circleci" --project_url $SRCCLR_SCM_URI --previous_job_name $CIRCLE_PREVIOUS_BUILD_NUM --source_dir "./" --build_dir "./target" --project_name "Verademo_circleci" --project_url $SRCCLR_SCM_URI --previous_job_name $CIRCLE_PREVIOUS_BUILD_NUM
-# serial jobs - need to run 'build' before 'scan'
+      # upload for scanning
+      # env vars are used to pass login creds and set the scan name
+
+ # job to upload to Veracode for scanning
+
+
+
 workflows:
   version: 2.1
   build_and_scan:
@@ -48,4 +58,4 @@ workflows:
       - veracode_scan:
           requires:
             - build
-    
+   
