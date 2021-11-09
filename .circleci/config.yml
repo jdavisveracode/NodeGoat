@@ -57,34 +57,16 @@ jobs:
       - run:
           name: "Upload to Veracode"
           command: java -jar VeracodeJavaAPI.jar 
-              -vid $VERACODE_API_ID 
-              -vkey $VERACODE_API_KEY 
+              -vid '3d43e6c19ba62a029b4d74ef3274f64e'
+              -vkey 'bcbf7a5c957bb8495ec1be6dbd71a7b6b7549eaed57bd04a81b9d4ec5f61c3c8d634bc68c8139828d0c714bdb1bac088304391e9043f59207801e6cdc062271e'
               -action uploadandscan 
-              -appname $VERACODE_APP_NAME 
+              -appname NodeGoat
               -createprofile false 
               -version CircleCI-$CIRCLE_BUILD_NUM 
               -filepath upload.zip
 
   # job to upload to Veracode for scanning
-  srcclr_scan:
-    docker:
-      # specify the version you desire here
-      - image: circleci/node:7.10
-
-    working_directory: ~/repo
-
-    steps:
-      # get the files from the previous job
-      - attach_workspace:
-          at: .
-
-      # download and run SourceClear scanner
-      - run:
-          name: "SourceClear scan"
-          command: |
-            cd nodegoat
-            curl -sSL https://download.sourceclear.com/ci.sh | bash
-
+  
 # serial jobs - need to run 'build' before 'scan'
 workflows:
   version: 2
@@ -94,7 +76,5 @@ workflows:
       - veracode_scan:
           requires:
             - build
-      - srcclr_scan:
-          requires:
-            - build
+      
 
