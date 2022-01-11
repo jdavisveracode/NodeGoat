@@ -20,5 +20,6 @@ steps:
     VeracodeAPIID: '$(vid)'
     VeracodeAPIsecret: '$(vkey)'
     fileToScan: '/myapp/NodeGoat.zip'
+    
 
 
