@@ -3,20 +3,36 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 steps:
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)'
-    includeRootFolder: true
-    archiveType: 'zip'
-    archiveFile: '$(Build.SourcesDirectory)/NodeGoat.zip'
-    replaceExistingArchive: true
+##- task: ArchiveFiles@2
+##  inputs:
+  ##  rootFolderOrFile: '$(Build.SourcesDirectory)'
+  ##  includeRootFolder: true
+  ##  archiveType: 'zip'
+  ##  archiveFile: '$(Build.SourcesDirectory)/NodeGoat.zip'
+  ##  replaceExistingArchive: true
 
- 
-- task: VeracodePipelineScan@0
+- task: CopyFiles@2
   inputs:
-    VeracodeAPIID: '3d43e6c19ba62a029b4d74ef3274f64e'
-    VeracodeAPIsecret: 'bcbf7a5c957bb8495ec1be6dbd71a7b6b7549eaed57bd04a81b9d4ec5f61c3c8d634bc68c8139828d0c714bdb1bac088304391e9043f59207801e6cdc062271e'
-    fileToScan: '$(Build.SourcesDirectory)/*.zip'
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '**/zip/**'
+    TargetFolder: '$(Build.SourcesDirectory)/filestoscan'
+ 
+
+#- task: VeracodePipelineScan@0
+  ##inputs:
+   ## VeracodeAPIID: '3d43e6c19ba62a029b4d74ef3274f64e'
+    ## VeracodeAPIsecret: 'bcbf7a5c957bb8495ec1be6dbd71a7b6b7549eaed57bd04a81b9d4ec5f61c3c8d634bc68c8139828d0c714bdb1bac088304391e9043f59207801e6cdc062271e'
+    ## fileToScan: '$(Build.SourcesDirectory)/Nodegoat.zip'
     
 
 
+- task: Veracode@3
+  inputs:
+    ConnectionDetailsSelection: 'Credentials'
+    apiId: '3d43e6c19ba62a029b4d74ef3274f64e'
+    apiKey: 'bcbf7a5c957bb8495ec1be6dbd71a7b6b7549eaed57bd04a81b9d4ec5f61c3c8d634bc68c8139828d0c714bdb1bac088304391e9043f59207801e6cdc062271e'
+    veracodeAppProfile: 'NodeGoatSampleScan'
+    version: '$(build.buildNumber)'
+    filepath: '$(build.artifactstagingdirectory)'
+    createProfile: true
+    maximumWaitTime: '360'
