@@ -1,90 +1,95 @@
-# This workflow will initiate a Veracode Static Analysis Pipeline scan, return a results.json and convert to SARIF for upload as a code scanning alert
-#change
-name: Veracode Static Analysis Pipeline Scan
-#commit scan
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
-on:
-  workflow_dispatch:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+Skip to content
+Search or jump to…
+Pull requests
+Issues
+Marketplace
+Explore
+ 
+@jdavisveracode 
+buzzcode
+/
+NodeGoat
+Public
+forked from OWASP/NodeGoat
+Code
+Issues
+55
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+NodeGoat/.github/workflows/policy-scan.yml
+@buzzcode
+buzzcode cleanup
+Latest commit 5dd0fb4 on Jul 15, 2021
+ History
+ 1 contributor
+53 lines (42 sloc)  1.2 KB
+   
+# foo
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+name: Policy scan
+
+on: [push, pull_request, workflow_dispatch]
+
 jobs:
-  # This workflow contains a job to build and submit pipeline scan, you will need to customize the build process accordingly and make sure the artifact you build is used as the file input to the pipeline scan file parameter
-  build:
-    # The type of runner that the job will run on
+  package:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-        
-  # zip the project and move it to a staging directory
-    - name: Zip Project
-      run: zip -R project.zip '*.py' '*.js' '*.php' '*.ts'
-      env:
-        build-name: project.zip
-      
-    - name: Archive package
-      uses: actions/upload-artifact@v2
-      with:
-        name: CodePackage
-        path: project.zip
-  
-  pipeline-scan:
-    needs: build
+      - name: checkout code
+        uses: actions/checkout@v2
+        with:
+          path: nodegoat
+
+      - name: package (zip)
+        run: zip -r upload.zip nodegoat -x *node_modules/* *.git/*
+
+      - name: save archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: scan-target
+          path: upload.zip
+
+  policy-scan:
+    needs: package
     runs-on: ubuntu-latest
     container: 
-      image: veracode/pipeline-scan:latest
-      options: --user root # our normal luser doesn't have privs to write to github directories
-
+      image: veracode/api-wrapper-java:latest
+      #options: --user root
     steps:
-    - name: Retrieve artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: CodePackage
-        path: /github/home
-    
-    #  Submit  project to pipeline scan
-    - name: Pipeline Scan
-      run: |
-        cd /github/home
-        java -jar /opt/veracode/pipeline-scan.jar --veracode_api_id="${{secrets.VERACODE_API_ID}}" --veracode_api_key="${{secrets.VERACODE_API_KEY}}" --fail_on_severity="Very High, High" --file="project.zip" --app_id="1231145" --json_output_file="results.json"
-
-      continue-on-error: true
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ScanResults
-        path: /github/home/results.json
-
-  build-and-policy-scan:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1 # Make java accessible on path so the uploadandscan action can run.
-        with: 
-          java-version: '8'
-          
-      # zip the project and move it to a staging directory
-      - name: Zip Project
-        run: zip -R project.zip '*.py' '*.js' '*.php' '*.ts' 'requirements.txt'
-        env:
-          build-name: project.zip
-      - uses: actions/upload-artifact@v2 # Copy files from repository to docker container so the next uploadandscan action can access them.
+      - name: get archive
+        uses: actions/download-artifact@v2
         with:
-          path: project.zip # Wildcards can be used to filter the files copied into the container. See: https://github.com/actions/upload-artifact
-      - uses: veracode/veracode-uploadandscan-action@master # Run the uploadandscan action. Inputs are described above.
-        with:
-          appname: 'NodeGoatSampleScan'
-          filepath: 'project.zip'
-          vid: '${{ secrets.VERACODE_API_ID }}'
-          vkey: '${{ secrets.VERACODE_API_KEY }}'
-       
-     
+          name: scan-target
+          path: /tmp
 
+      - name: debug1
+        run: |
+          pwd
+          ls -l /tmp
+      - name: scan
+        run: |
+          java -jar /opt/veracode/api-wrapper.jar \
+              -vid ${{ secrets.VERACODE_API_ID }} -vkey ${{ secrets.VERACODE_API_KEY }} \
+              -action UploadAndScan \
+              -appname "NodeGoat" -createprofile false \
+              -filepath /tmp/upload.zip -version "GitHub $GITHUB_RUN_NUMBER"                
+        continue-on-error: true
+
+
+
+© 2022 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Loading complete
