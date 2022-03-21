@@ -3,13 +3,13 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 steps:
-##- task: ArchiveFiles@2
-##  inputs:
-  ##  rootFolderOrFile: '$(Build.SourcesDirectory)'
-  ##  includeRootFolder: true
-  ##  archiveType: 'zip'
-  ##  archiveFile: '$(Build.SourcesDirectory)/NodeGoat.zip'
-  ##  replaceExistingArchive: true
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.SourcesDirectory)/NodeGoat.zip'
+    replaceExistingArchive: true
 
 - task: CopyFiles@2
   inputs:
